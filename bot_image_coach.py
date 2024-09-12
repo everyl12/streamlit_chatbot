@@ -92,7 +92,7 @@ if st.session_state.start_chat:
             try:
                 response = openai.images.generate(
                     model="dall-e-3",
-                    prompt=f"{system_prompt} {image_prompt}",
+                    prompt=f"{image_prompt} {system_prompt}",
                     n=1,  # Number of images to generate
                     size="1024x1024",  # Image size
                     quality="standard"
