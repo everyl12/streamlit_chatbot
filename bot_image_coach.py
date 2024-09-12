@@ -30,7 +30,7 @@ if not st.session_state.start_chat and st.button("Start Chat"):
 # Title and description
 st.title("AI Image Generation Assistant")
 if not st.session_state.start_chat:
-    st.write("Welcome to the AI Image Generation Assistant! Step by step, I will help you generate LGBTQ+ patient images based on your prompts while ensuring the image aligns with Diversity, Equity, and Inclusion (DEI) principles. Make sure the images that reflects diverse identities and minimizes biases or stereotypes. Click 'Start Chat' to begin.")
+    st.write("Welcome to the AI Image Generation Assistant! This tool will help you generate LGBTQ+ patient images by gathering prompts. Click 'Start Chat' to begin.")
 
 # Chat session
 if st.session_state.start_chat:
@@ -109,5 +109,6 @@ if st.session_state.start_chat:
     if st.session_state.generated_image_url:
         st.write("### Generated Image")
         st.image(st.session_state.generated_image_url, caption="Generated Image")
+
 
 
