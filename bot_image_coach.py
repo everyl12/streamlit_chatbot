@@ -34,7 +34,7 @@ system_prompt = "Play the role of an AI image generation assistant in the contex
 
 st.set_page_config(page_title="ImageGPT", page_icon=":speech_balloon:")
 
-openai.api_key = st.secrets["OPENAI_API_KEY"]
+#openai.api_key = st.secrets["OPENAI_API_KEY"]
 
 # Start Chat button
 if st.sidebar.button("Start"):
