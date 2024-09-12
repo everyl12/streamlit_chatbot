@@ -30,24 +30,13 @@ if "prompts" not in st.session_state:
     st.session_state.prompts = {"gender_identity": "", "age": "", "ethnicity": "", "health": "", "interaction": ""}
 
 # Define your system prompt
-system_prompt = "Play the role of an AI image generation assistant in the context of preventive healthcare. Welcome users and tell them to generate images for a flyer that encourages LGBTQ+ communities to utilize preventive healthcare services (e.g., routine check-ups, vaccinations, or sexual health screenings. Please generate high-resolution realistic photograph with details."
+system_prompt = "Play the role of an AI image generation assistant in the context of preventive healthcare. Welcome users and tell them to generate images for a flyer that encourages LGBTQ+ communities to utilize preventive healthcare services (e.g., routine check-ups, vaccinations, or sexual health screenings). Please generate high-resolution realistic photographs with details."
 
 st.set_page_config(page_title="ImageGPT", page_icon=":speech_balloon:")
 
-#openai.api_key = st.secrets["OPENAI_API_KEY"]
-
-# Start Chat button
-if st.sidebar.button("Start"):
+# Start Chat button (moved from sidebar)
+if not st.session_state.start_chat and st.button("Start"):
     st.session_state.start_chat = True
-
-# Exit Chat button
-if st.button("Exit Chat"):
-    st.session_state.messages = []  # Clear the chat history
-    st.session_state.start_chat = False  # Reset the chat state
-    st.session_state.generated_image_url = None
-    st.session_state.current_step = 1
-    st.session_state.prompts = {"gender_identity": "", "age": "", "ethnicity": "", "health": "", "interaction": ""}
-    save_chat_history(st.session_state.messages)  # Save the cleared chat history
 
 # Title and description
 st.title("AI Image Generation Assistant")
@@ -56,8 +45,8 @@ st.title("AI Image Generation Assistant")
 if not st.session_state.start_chat:
     st.write("### Welcome to the AI Image Generation Assistant!")
     st.write("In this tool, you will generate LGBTQ+ patient images based on your prompts while ensuring the image aligns with Diversity, Equity, and Inclusion (DEI) principles. "
-             "Follow the following steps to make sure the images that reflects diverse identities and minimizes biases or stereotypes.")
-    st.write("Once you're ready, click the **Start** button on the sidebar to begin!")
+             "Follow the steps to ensure the images reflect diverse identities and minimize biases or stereotypes.")
+    st.write("Once you're ready, click the **Start** button to begin!")
 
 # Chat session
 if st.session_state.start_chat:
@@ -118,3 +107,4 @@ if st.session_state.start_chat:
 
 else:
     st.write("Click 'Start' to begin.")
+
