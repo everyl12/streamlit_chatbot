@@ -1,115 +1,99 @@
 import openai
 import streamlit as st
+import time
+import json
+import os
+
+assistant_id = "asst_SWDs3AXdOfnU3Ki6TYHSiNMw"
+
+client = openai
+
+# Path to save chat history
+CHAT_HISTORY_PATH = "chat_history.json"
+
+def load_chat_history():
+    if os.path.exists(CHAT_HISTORY_PATH):
+        with open(CHAT_HISTORY_PATH, "r") as file:
+            return json.load(file)
+    return []
+
+def save_chat_history(chat_history):
+    with open(CHAT_HISTORY_PATH, "w") as file:
+        json.dump(chat_history, file)
 
 # Initialize session state variables
 if "start_chat" not in st.session_state:
     st.session_state.start_chat = False
+if "thread_id" not in st.session_state:
+    st.session_state.thread_id = None
 if "messages" not in st.session_state:
-    st.session_state.messages = []  # Initialize messages as an empty list (no chat history)
-if "generated_image_url" not in st.session_state:
-    st.session_state.generated_image_url = None
-if "current_step" not in st.session_state:
-    st.session_state.current_step = 1  # Track progress through steps
-if "prompts" not in st.session_state:
-    st.session_state.prompts = {"gender_identity": "", "age": "", "ethnicity": "", "health": "", "interaction": ""}
-if "revision_prompt" not in st.session_state:
-    st.session_state.revision_prompt = ""  # Store user's revision prompt
-if "image_prompt" not in st.session_state:
-    st.session_state.image_prompt = ""  # Store image prompt for persistence
+    st.session_state.messages = load_chat_history()
 
-# Define your system prompt
-system_prompt = "Play the role of an AI image generation assistant in the context of preventive healthcare. The image aims to encourage LGBTQ+ communities to utilize preventive healthcare services (e.g., routine check-ups, vaccinations, or sexual health screenings). Please generate high-resolution realistic photographs with details."
+st.set_page_config(page_title="GroupGPT", page_icon=":speech_balloon:")
 
-st.set_page_config(page_title="ImageGPT", page_icon=":speech_balloon:")
+#openai.api_key = st.secrets["OPENAI_API_KEY"]
 
-# Start Chat button
-if not st.session_state.start_chat and st.button("Start"):
+if st.sidebar.button("Start Chat"):
     st.session_state.start_chat = True
+    thread = client.beta.threads.create()
+    st.session_state.thread_id = thread.id
 
-# Title and description
-st.title("AI Image Generation Assistant")
+st.title("Thematic Analysis Chatbot")
+st.write("I am a thematic analysis chatbot")
 
-# Welcome message and task description
-if not st.session_state.start_chat:
-    st.write("### Welcome to the AI Image Generation Assistant!")
-    st.write("In this tool, you will generate LGBTQ+ patient images based on your prompts while ensuring the image aligns with Diversity, Equity, and Inclusion (DEI) principles. "
-             "Follow the steps to ensure the images reflect diverse identities and minimize biases or stereotypes.")
-    st.write("Once you're ready, click the **Start** button to begin!")
+if st.button("Exit Chat"):
+    st.session_state.messages = []  # Clear the chat history
+    st.session_state.start_chat = False  # Reset the chat state
+    st.session_state.thread_id = None
+    save_chat_history(st.session_state.messages)  # Save the cleared chat history
 
-# Chat session
 if st.session_state.start_chat:
-    # Step-by-step prompt handling (keep previous steps visible)
-    if st.session_state.current_step >= 1:
-        st.write("### Step 1: Gender Identity and Sexual Orientation")
-        st.session_state.prompts['gender_identity'] = st.text_input("Ensure the patient in the image reflects a member of the LGBTQ+ community. You may specify gender identity (e.g., non-binary, trans) and the sexual orientation (e.g., LGBTQ+, bisexual, queer).", st.session_state.prompts['gender_identity'])
+    if "openai_model" not in st.session_state:
+        st.session_state.openai_model = "gpt-4o"
+    
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
 
-    if st.session_state.current_step >= 2:
-        st.write("### Step 2: Age of the Patient")
-        st.session_state.prompts['age'] = st.text_input("Specify the patient's age group (child, adolescent, adult, elderly)", st.session_state.prompts['age'])
+    if prompt := st.chat_input("Let's discuss an issue."):
+        st.session_state.messages.append({"role": "user", "content": prompt})
+        with st.chat_message("user"):
+            st.markdown(prompt)
 
-    if st.session_state.current_step >= 3:
-        st.write("### Step 3: Racial background of the Patient")
-        st.session_state.prompts['ethnicity'] = st.text_input("Specify the race/ethnicity of the patient. Is the patient Black, White, Hispanic, Asian, Indigenous, or of mixed race?", st.session_state.prompts['ethnicity'])
-
-    if st.session_state.current_step >= 4:
-        st.write("### Step 4: Health Condition and Appearance")
-        st.session_state.prompts['health'] = st.text_input("Consider the patient's health condition and appearance. Describe their health condition—are they healthy, managing a chronic illness, recovering from injury, or living with a disability? Consider the patient’s clothing, hairstyle, accessories, or any visible tattoos, ensuring they reflect the patient's identity.", st.session_state.prompts['health'])
-
-    if st.session_state.current_step >= 5:
-        st.write("### Step 5: Interaction with the Doctor")
-        st.session_state.prompts['interaction'] = st.text_input("Describe the patient’s interaction with the doctor. How are the patient and doctor interacting? What are their body movement and facial expression?", st.session_state.prompts['interaction'])
-
-    # Navigation buttons for each step
-    if st.session_state.current_step < 5:
-        if st.button("Next Step"):
-            st.session_state.current_step += 1
-    else:
-        if st.button("Generate Image"):
-            # Combine all prompts for final image generation and store in session state
-            st.session_state.image_prompt = (f"A patient who is {st.session_state.prompts['gender_identity']}, aged {st.session_state.prompts['age']}, "
-                                             f"of {st.session_state.prompts['ethnicity']}. The patient is {st.session_state.prompts['health']}, "
-                                             f"and the interaction with the doctor shows {st.session_state.prompts['interaction']}.")
-            
-            # Call OpenAI to generate an image
-            try:
-                response = openai.images.generate(
-                    model="dall-e-3",
-                    prompt=f"{st.session_state.image_prompt} {system_prompt}",
-                    n=1,  # Number of images to generate
-                    size="1024x1024",  # Image size
-                    quality="standard"
-                )
-                st.session_state.generated_image_url = response.data[0].url
-            except Exception as e:
-                st.error(f"Error generating image: {e}")
-
-    # Display the generated image and ask for revisions
-    if st.session_state.generated_image_url:
-        st.image(st.session_state.generated_image_url, caption="Generated Image")
+        client.beta.threads.messages.create(
+                thread_id=st.session_state.thread_id,
+                role="user",
+                content=prompt
+            )
         
-        st.write("### Would you like to make any revisions?")
-        revision_wanted = st.radio("Do you want to make any changes to the generated image?", ("No", "Yes"))
+        run = client.beta.threads.runs.create(
+            thread_id=st.session_state.thread_id,
+            assistant_id=assistant_id,
+            instructions="You are a social scientist with expertise in qualitative data and thematic analysis. See the attached file for guides, steps, procedures on thematic analysis. You will perform three steps in conducting a thematic analysis. First,  use the data provided by the user and generate initial codes after reviewing the data multiple times. The naming of the initial codes should be accurate, data-based, and thoughtful. For each initial code, provide 2 verbatim quotes to support your codes. Remember the quotes should be 100% verbatim, direct quotes. Do not change any single words or punctuation marks. Ask for  feedback and comments from users before proceeding. Next, you will cluster the generated codes into thematic groups (i.e., themes) based on their similarity and deeper connections. Ask feedback and comments from users before proceeding. Last, ask users whether they have a research question, and if so, provide the research question. Then you will develop specific codes addressing this research question. The naming of the specific codes should be based on the data."
+        )
+
+        while run.status != 'completed':
+            time.sleep(1)
+            run = client.beta.threads.runs.retrieve(
+                thread_id=st.session_state.thread_id,
+                run_id=run.id
+            )
+        messages = client.beta.threads.messages.list(
+            thread_id=st.session_state.thread_id
+        )
+
+        # Process and display assistant messages
+        assistant_messages_for_run = [
+            message for message in messages 
+            if message.run_id == run.id and message.role == "assistant"
+        ]
+        for message in assistant_messages_for_run:
+            st.session_state.messages.append({"role": "assistant", "content": message.content[0].text.value})
+            with st.chat_message("assistant"):
+                st.markdown(message.content[0].text.value)
         
-        if revision_wanted == "Yes":
-            st.session_state.revision_prompt = st.text_input("Please describe the revisions you'd like to make:")
-            if st.button("Submit Revision"):
-                # Combine the new revision with the original image prompt
-                revision_image_prompt = f"{st.session_state.revision_prompt} {st.session_state.image_prompt} {system_prompt}"
-                
-                try:
-                    response = openai.images.generate(
-                        model="dall-e-3",
-                        prompt=revision_image_prompt,
-                        n=1,
-                        size="1024x1024",
-                        quality="standard"
-                    )
-                    st.session_state.generated_image_url = response.data[0].url
-                except Exception as e:
-                    st.error(f"Error generating image: {e}")
-        
-        elif revision_wanted == "No":
-            st.write("No revisions requested.")
+        save_chat_history(st.session_state.messages)  # Save chat history after each interaction
+
 else:
-    st.write("Click 'Start' to begin.")
+    st.write("Click 'Start Chat' to begin.")
 
