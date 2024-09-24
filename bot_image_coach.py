@@ -187,38 +187,38 @@ def generate_image(prompt):
 
 
 # Function to combine the original summary with the user's feedback and regenerate the image - one chance
-def ask_for_regeneration():
-    # First ask whether the user is satisfied with the image, but only if an image exists
-    if st.session_state.generated_image_urls:
-        satisfied = st.radio("Are you satisfied with the image?", ("Yes", "No"))
+# def ask_for_regeneration():
+#     # First ask whether the user is satisfied with the image, but only if an image exists
+#     if st.session_state.generated_image_urls:
+#         satisfied = st.radio("Are you satisfied with the image?", ("Yes", "No"))
 
-    if satisfied == "Yes":
-        # If they are satisfied, instruct them to save and download the chat
-        st.write("Awesome! Just hit 'Save Chat', wait 10 seconds, and then click 'Download Chat'. Don't forget to upload the chat histroy to Qualtrics.")
-    else:
-        # If not satisfied, ask them for modifications
-        st.write("Let me know what you'd like to modify below.")
-        user_feedback = st.text_input("Your modification:")
+#     if satisfied == "Yes":
+#         # If they are satisfied, instruct them to save and download the chat
+#         st.write("Awesome! Just hit 'Save Chat', wait 10 seconds, and then click 'Download Chat'. Don't forget to upload the chat histroy to Qualtrics.")
+#     else:
+#         # If not satisfied, ask them for modifications
+#         st.write("Let me know what you'd like to modify below.")
+#         user_feedback = st.text_input("Your modification:")
         
-        if user_feedback:
-            if st.button("Regenerate Image"):
-                # Regenerate the image using the user's feedback (you'd have the logic to handle this)
-                detailed_summary = generate_summary()
-                new_prompt = f"{detailed_summary} Additionally, {user_feedback}."
-                new_image_url = generate_image(new_prompt)
+#         if user_feedback:
+#             if st.button("Regenerate Image"):
+#                 # Regenerate the image using the user's feedback (you'd have the logic to handle this)
+#                 detailed_summary = generate_summary()
+#                 new_prompt = f"{detailed_summary} Additionally, {user_feedback}."
+#                 new_image_url = generate_image(new_prompt)
 
-                if new_image_url and new_image_url not in st.session_state.generated_image_urls:
-                    st.session_state.generated_image_urls.append(new_image_url)
-                    # Automatically save the chat history after generating an image
-                    #save_chat_history(st.session_state.messages)
+#                 if new_image_url and new_image_url not in st.session_state.generated_image_urls:
+#                     st.session_state.generated_image_urls.append(new_image_url)
+#                     # Automatically save the chat history after generating an image
+#                     #save_chat_history(st.session_state.messages)
                 
-                st.image(new_image_url, caption="Re-generated Image")
+#                 st.image(new_image_url, caption="Re-generated Image")
 
-                # Set the flag to prevent the form from showing again
-                st.session_state.image_regenerated = True
+#                 # Set the flag to prevent the form from showing again
+#                 st.session_state.image_regenerated = True
 
-                # Provide instructions to save the chat after regeneration
-                st.write("To save the chat and images, hit 'Save Chat', wait 10 seconds, and then go ahead and click 'Download Chat'. Please upload the chat histroy to Qualtrics.")
+#                 # Provide instructions to save the chat after regeneration
+#                 st.write("To save the chat and images, hit 'Save Chat', wait 10 seconds, and then go ahead and click 'Download Chat'. Please upload the chat histroy to Qualtrics.")
 
 #######################################################Conversation starts########################################################
 if st.session_state.start_chat:
@@ -255,7 +255,7 @@ if st.session_state.start_chat:
         run = client.beta.threads.runs.create(
             thread_id=st.session_state.thread_id,
             assistant_id=assistant_id,
-            instructions="Play the role of an AI image generation assistant in the context of preventive healthcare. The first remark from you should be welcoming them and ask whether they are ready, and then walk them through several steps. In the first step, ask users to describe the patient's gender identity (e.g., non-binary, trans) and the sexual orientation (e.g., LGBTQ+, bisexual, queer). In the second step, ask users what is the patient's age group (child, adolescent, adult, elderly). In the third step, ask users to describe the patient's racial or ethnic background (e.g., Black, White, Hispanic, Asian, Indigenous). In the fourth step, what is the patient's health condition and appearance? (e.g., healthy, chronic illness, recovering from injury, etc.) In the fifth step, how are the patient and doctor interacting? For example, are they talking or engaging in a physical exam? Do not present all steps at once. Go step by step. Each step should be a question from you eliciting user input. In each step, ask users to input information to guide image generation. In each step, be concise and do not use more than 2 sentences. In the last step, provide a summary of all user inputs by using the following phrase 'Here is a summary of your prompts'."
+            instructions="Play the role of an AI image generation assistant in the context of preventive healthcare. The first remark from you should be welcoming them and ask whether they are ready, and then walk them through several steps. In the first step, ask users to describe the patient's gender identity (e.g., non-binary) and the sexual orientation (e.g., LGBTQ+, bisexual, queer). In the second step, ask users what is the patient's age group (child, adolescent, adult, elderly). In the third step, ask users to describe the patient's racial or ethnic background (e.g., Black, White, Hispanic, Asian, Indigenous). In the fourth step, what is the patient's health condition and appearance? (e.g., healthy, chronic illness, recovering from injury, etc.) In the fifth step, how are the patient and doctor interacting? For example, are they talking or engaging in a physical exam? Do not present all steps at once. Go step by step. Each step should be a question from you eliciting user input. In each step, ask users to input information to guide image generation. In each step, be concise and do not use more than 2 sentences. In the last step, provide a summary of all user inputs by using the following phrase 'Here is a summary of your prompts'."
         )
 
         # Waiting for the assistant's run to complete
@@ -315,11 +315,11 @@ if st.session_state.start_chat:
             for idx, image_url in enumerate(st.session_state.generated_image_urls[1:], start=1):
                 st.image(image_url, caption=f"Re-generated Image {idx}")
 
-        time.sleep(5)
+            # Provide instructions to save the chat after regeneration
+            st.write("To save the chat and images, hit 'Save Chat', wait 10 seconds, and then go ahead and click 'Download Chat'. Please upload the file to Qualtrics.")
 
-        # Call the function to ask for changes and regenerate the image
-        ask_for_regeneration()
 
 else:
     st.write("Click 'Start Chat' to begin.")
+
 
