@@ -126,9 +126,15 @@ def generate_summary():
         thread_id=st.session_state.thread_id,
         assistant_id=assistant_id,
         instructions=(
-            "Please summarize the conversation in an appropriate, detailed prompt for generating an image that promotes preventive healthcare services (e.g., routine check-ups, vaccinations, or sexual health screenings)."
-            "Ensure to include context and details for each aspect the user provided. For example, instead of just 'adult,' describe it as 'an Asian adult patient smiling during a healthcare check-up with a doctor.' "
-            "Make sure the summary is coherent and suitable for generating a healthcare-related image while adhering to safety guidelines."
+            # "Please summarize the conversation in an appropriate, detailed prompt for generating an image that promotes preventive healthcare services (e.g., routine check-ups, vaccinations, or sexual health screenings)."
+            # "Ensure to include context and details for each aspect the user provided. For example, instead of just 'adult,' describe it as 'an Asian adult patient smiling during a healthcare check-up with a doctor.' "
+            # "Make sure the summary is coherent and suitable for generating a healthcare-related image while adhering to safety guidelines."
+            "Please summarize the conversation in a detailed, appropriate, and descriptive prompt for generating an image that encourages LGBTQ+ communities"
+            "to utilize preventive healthcare services (e.g., routine check-ups, vaccinations, or sexual health screenings). "
+            "Ensure to include context and details for each aspect the user provided, such as the patient's gender identity, sexual orientation, "
+            "age group, racial or ethnic background, health condition, and how the patient and doctor are interacting. "
+            "For example, instead of just 'Asian,' describe it as 'an Asian adult patient smiling during a healthcare check-up with a doctor.' "
+            "Make sure the summary is in a complete, coherent form ready to be used for generating a healthcare-related image."
         )
     )
 
@@ -166,25 +172,28 @@ def generate_image(prompt):
         # Check if the URL is valid
         if image_url and image_url.startswith("http"):
             st.session_state.generated_image_urls.append(image_url)  # Append the valid URL
-            # Automatically save the chat history after generating an image
-            #save_chat_history(st.session_state.messages)
             return image_url
         else:
             st.error("Invalid image URL received from API.")
             return None
-        
-    except openai.error.InvalidRequestError as e:
-        # Handle content policy violation errors specifically
-        if 'content_policy_violation' in str(e):
-            st.error("The image generation request was rejected. Please exit chat and start again.")
-        else:
-            st.error(f"Error generating image: {str(e)}")
-        return None
-        
-    except Exception as e:
-        st.error(f"Error generating image: {str(e)}")
-        return None  # Return None if there is an error
 
+    except openai.error.BadRequestError as e:
+        # Handle bad requests (e.g., content policy violations)
+        if 'content_policy_violation' in str(e):
+            st.error("Failed request due to content policy. Please try again.")
+        else:
+            st.error(f"Bad request error: {e}")
+        return None
+
+    except openai.OpenAIError as e:
+        # Handle all other OpenAI-related errors
+        st.error(f"An error occurred with OpenAI API: {e}")
+        return None
+
+    except Exception as e:
+        # Handle any other unexpected errors
+        st.error(f"Unexpected error: {str(e)}")
+        return None
 
 # Function to combine the original summary with the user's feedback and regenerate the image - one chance
 # def ask_for_regeneration():
@@ -228,11 +237,11 @@ if st.session_state.start_chat:
     if st.session_state.random_variable == 0:
         st.write("Hi! I am ThoughtFlowAI, here to assist you in image generation."
                  " I am an AI model fine-tuned to **optimize efficiency over diversity**."
-                 " I’ll ask you a few simple questions to get a clear idea of what you have in mind. Ready to begin?")
+                 " I’ll ask you a few simple questions to get a clear idea of what you have in mind.")
     else:
         st.write("Hi! I am ThoughtFlowAI, here to assist you in image generation."
                  " I am an AI model fine-tuned to **optimize diversity over efficiency**."
-                 " I’ll ask you a few simple questions to get a clear idea of what you have in mind. Ready to begin?")
+                 " I’ll ask you a few simple questions to get a clear idea of what you have in mind.")
 
     if "openai_model" not in st.session_state:
         st.session_state.openai_model = "gpt-4o-mini"
