@@ -46,7 +46,7 @@ def generate_summary():
             # "Please summarize the conversation in an appropriate, detailed prompt for generating an image that promotes preventive healthcare services (e.g., routine check-ups, vaccinations, or sexual health screenings)."
             # "Ensure to include context and details for each aspect the user provided. For example, instead of just 'adult,' describe it as 'an Asian adult patient smiling during a healthcare check-up with a doctor.' "
             # "Make sure the summary is coherent and suitable for generating a healthcare-related image while adhering to safety guidelines."
-            "Please summarize the conversation in a detailed, appropriate rompt for generating an image that encourages LGBTQ+ communities to utilize preventive healthcare services (e.g., routine check-ups, vaccinations, or sexual health screenings). "
+            "Please summarize the conversation in a detailed, appropriate rompt for generating an image that encourages LGBTQ+ communities to utilize preventive healthcare services."
             "Ensure to include context and details for each aspect the user provided, such as the patient's gender identity, sexual orientation, age group, racial or ethnic background, health condition, and how the patient and doctor are interacting. "
             "For example, instead of just 'Asian,' describe it as 'an Asian adult patient smiling during a healthcare check-up with a doctor.' "
             "Make sure the summary is in a complete, coherent form ready to be used for generating a healthcare-related image. It should not be too long to exceed the token limit."
