@@ -92,7 +92,7 @@ def generate_image(prompt):
             st.error("Invalid image URL received from API.")
             return None
 
-    except openai.error.BadRequestError as e:
+    except openai.BadRequestError as e:
         # Handle bad requests (e.g., content policy violations)
         if 'content_policy_violation' in str(e):
             st.error("Failed request due to content policy. Please wait 10 seconds and then click 'Generate Image' to try again.")
