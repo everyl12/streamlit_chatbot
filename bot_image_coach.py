@@ -12,26 +12,13 @@ assistant_id = "asst_Ck3R41NmsbSM0kDxUYuEVDFf"
 
 client = openai
 
-# Path to save chat history
-CHAT_HISTORY_PATH = "chat_history.json"
-
-def load_chat_history():
-    if os.path.exists(CHAT_HISTORY_PATH):
-        with open(CHAT_HISTORY_PATH, "r") as file:
-            return json.load(file)
-    return []
-
-def save_chat_history(chat_history):
-    with open(CHAT_HISTORY_PATH, "w") as file:
-        json.dump(chat_history, file)
-
 # Initialize session state variables
 if "start_chat" not in st.session_state:
     st.session_state.start_chat = False
 if "thread_id" not in st.session_state:
     st.session_state.thread_id = None
 if "messages" not in st.session_state:
-    st.session_state.messages = load_chat_history()
+    st.session_state.messages = []
 if "conversation_summary" not in st.session_state:
     st.session_state.conversation_summary = None
 if "generated_image_urls" not in st.session_state:
@@ -50,15 +37,6 @@ with st.sidebar:
         thread = client.beta.threads.create()
         st.session_state.thread_id = thread.id
 
-    if st.button("Clear Chat"):
-        st.session_state.messages = []  # Clear the chat history
-        st.session_state.start_chat = False  # Reset the chat state
-        st.session_state.thread_id = None
-        st.session_state.conversation_started = False  # Reset conversation tracking
-        st.session_state.summary_generated = False  # Reset summary tracking
-        st.session_state.generated_image_urls = []
-
-
 # Function to generate a detailed, safe conversation summary for DALL-E (used at the backend only)
 def generate_summary():
     summary_run = client.beta.threads.runs.create(
@@ -68,12 +46,10 @@ def generate_summary():
             # "Please summarize the conversation in an appropriate, detailed prompt for generating an image that promotes preventive healthcare services (e.g., routine check-ups, vaccinations, or sexual health screenings)."
             # "Ensure to include context and details for each aspect the user provided. For example, instead of just 'adult,' describe it as 'an Asian adult patient smiling during a healthcare check-up with a doctor.' "
             # "Make sure the summary is coherent and suitable for generating a healthcare-related image while adhering to safety guidelines."
-            "Please summarize the conversation in a detailed, appropriate, and descriptive prompt for generating an image that encourages LGBTQ+ communities"
-            "to utilize preventive healthcare services (e.g., routine check-ups, vaccinations, or sexual health screenings). "
-            "Ensure to include context and details for each aspect the user provided, such as the patient's gender identity, sexual orientation, "
-            "age group, racial or ethnic background, health condition, and how the patient and doctor are interacting. "
+            "Please summarize the conversation in a detailed, appropriate rompt for generating an image that encourages LGBTQ+ communities to utilize preventive healthcare services (e.g., routine check-ups, vaccinations, or sexual health screenings). "
+            "Ensure to include context and details for each aspect the user provided, such as the patient's gender identity, sexual orientation, age group, racial or ethnic background, health condition, and how the patient and doctor are interacting. "
             "For example, instead of just 'Asian,' describe it as 'an Asian adult patient smiling during a healthcare check-up with a doctor.' "
-            "Make sure the summary is in a complete, coherent form ready to be used for generating a healthcare-related image."
+            "Make sure the summary is in a complete, coherent form ready to be used for generating a healthcare-related image. It should not be too long to exceed the token limit."
         )
     )
 
@@ -101,7 +77,7 @@ def generate_image(prompt):
     try:
         response = openai.images.generate(
             model="dall-e-3",
-            prompt=prompt + " Please generate healthcare-related, high-resolution realistic photographs with real humans and details.",
+            prompt=prompt + " Please generate healthcare-related, high-resolution realistic photos with real humans and details.The images should reflect real-world settings, resemble genuine healthcare scenarios, as seen in real photographs.",
             n=1,  # Number of images to generate
             size="1024x1024",  # Image size
             quality="standard"
@@ -119,7 +95,7 @@ def generate_image(prompt):
     except openai.error.BadRequestError as e:
         # Handle bad requests (e.g., content policy violations)
         if 'content_policy_violation' in str(e):
-            st.error("Failed request due to content policy. Please try again.")
+            st.error("Failed request due to content policy. Please wait 10 seconds and then click 'Generate Image' to try again.")
         else:
             st.error(f"Bad request error: {e}")
         return None
@@ -161,15 +137,17 @@ if st.session_state.start_chat:
         run = client.beta.threads.runs.create(
             thread_id=st.session_state.thread_id,
             assistant_id=assistant_id,
-            instructions="Play the role of an AI image generation assistant in the context of preventive healthcare. The tone should be helpful and personal. Be concise." 
+            instructions="Play the role of an AI image generation assistant to help users generate an image encouraging LGBTQ+ communities to utilize preventive healthcare services. The tone should be helpful and personal. Be concise." 
             "The first remark from you should be welcoming them empathetic. Tell them you will ask them a few simple questions to get a clear idea of what you have in mind. Gently remind them they just have one chance. Ask gently whether they are ready to proceed."
             "In the first step, invite the user to describe the patient's gender identity (e.g., non-binary) and the sexual orientation (e.g., LGBTQ+, bisexual, queer)."
             "In the second step, ask users what is the patient's age group (child, adolescent, adult, elderly)."
             "In the third step, ask users to describe the patient's racial or ethnic background (e.g., Black, White, Hispanic, Asian, Indigenous)."
             "In the fourth step, what is the patient's health condition and appearance? (e.g., healthy, chronic illness, recovering from injury, etc.)"
-            "In the fifth step, how are the patient and doctor interacting? For example, are they talking or engaging in a physical exam?"
-            "Do not present all steps at once. Go step by step. Each step should be a question from you eliciting user input. In each step, ask users to input information to guide image generation. In each step, be concise and do not use more than 2 sentences."
-            "In the last step, provide a summary of the user’s prompts using the following phrase: 'Thank you for sharing. Here's a summary of your prompts.'"
+            "In the fifth step, how are the patient and doctor interacting? For example, are they talking or engaging in a physical exam? Ask them to provide anything else they would like to add."
+            "Do not present all steps at once. Go step by step. Each step should be a question from you eliciting user input. In each step, ask users to input information to guide image generation."
+            "In the sixth step, thank them and summarize their prompt using the following phrase: 'so you want a picture'. Ask whether they are satisfied with their prompts, if not, please revise."
+            "In the last step, provide an updated summary of the user’s prompts using the following phrase: 'Thanks! Here's a final summary of your prompts'."
+            "And we'll get started once they click 'Generate Image'."
         )
 
         # Waiting for the assistant's run to complete
@@ -197,19 +175,17 @@ if st.session_state.start_chat:
         # Track that the conversation has started
         st.session_state.conversation_started = True
         
-        save_chat_history(st.session_state.messages)  # Save chat history after each interaction
-
     # Display the summary and check if "a summary of your prompts" is in the messages
     if st.session_state.conversation_started:
         for message in st.session_state.messages:
-            if "a summary of your prompts" in message["content"]:
+            if "summary of your prompts" in message["content"]:
                 st.session_state.conversation_summary = message["content"]  # Assign summary content
                 st.session_state.summary_generated = True
 
     # Display the "Generate Image" button only after the summary
     if st.session_state.summary_generated and st.session_state.conversation_summary is not None:
         if st.button("Generate Image"):
-            st.write("Generating your image, please wait...")
+            st.write("Generating your image, please wait 10-20s...")
 
             detailed_summary = generate_summary()
             new_image_url = generate_image(detailed_summary)
