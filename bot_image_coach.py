@@ -161,7 +161,7 @@ if st.session_state.start_chat:
         run = client.beta.threads.runs.create(
             thread_id=st.session_state.thread_id,
             assistant_id=assistant_id,
-            instructions="Play the role of an AI image generation assistant in the context of preventive healthcare. The tone should be helpful and personal. Be precise." 
+            instructions="Play the role of an AI image generation assistant in the context of preventive healthcare. The tone should be helpful and personal. Be concise." 
             "The first remark from you should be welcoming them empathetic. Tell them you will ask them a few simple questions to get a clear idea of what you have in mind. Gently remind them they just have one chance. Ask gently whether they are ready to proceed."
             "In the first step, invite the user to describe the patient's gender identity (e.g., non-binary) and the sexual orientation (e.g., LGBTQ+, bisexual, queer)."
             "In the second step, ask users what is the patient's age group (child, adolescent, adult, elderly)."
